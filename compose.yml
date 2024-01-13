@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: python-app
+    build:
+      context: .
+      dockerfile: ./src/.docker/app/Dockerfile
+    tty: true
+    volumes:
+      - ./src:/app
+    ports:
+      - 8000:8000
+    working_dir: /app
