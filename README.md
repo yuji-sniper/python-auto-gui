@@ -1,6 +1,13 @@
 # Python開発環境
 汎用のPython開発環境リポジトリです。
 
+## 作成したリポジトリへのプッシュ
+Githubでリポジトリを作成しておく。
+```
+$ git remote add origin {リポジトリのエンドポイント}
+$ git push -u origin master --force
+```
+
 ## 初回環境構築
 ```
 $ make init
