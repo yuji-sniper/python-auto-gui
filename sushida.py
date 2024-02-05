@@ -8,6 +8,10 @@ import pyocr
 # https://sushida.net/play.html
 
 
+ini_x, ini_y, ini_w, ini_h = 540, 483, 352, 24
+w_shrink_size = 3
+
+
 # セットアップ
 def setup():
     pag.FAILSAFE = True
@@ -23,15 +27,15 @@ def start_game():
     pag.moveTo(670, 575, duration=0.5)
     pag.click()
     pag.press('enter')
-    time.sleep(4)
+    time.sleep(2.5)
 
 # スクリーンショットを撮る
-def screenshot() -> Image:
+def screenshot(x, y, w, h) -> Image:
     img = pag.screenshot(
         'images/chars/sushida.png',
-        region=(540, 483, 352, 24)
+        region=(x, y, w, h)
     )
-    img.save('images/chars/sushida.png')
+    img = img.convert('L')
     return img
 
 # スクショから文字列を読み取る
@@ -43,20 +47,45 @@ def read_chars(tool, img: Image) -> str:
     )
     return text
 
+# スクショの幅を調整する（空文字列の場合または前回と同じ文字列の場合に幅を縮める）
+def change_width(x, w, text, before_text):
+    is_empty = (text == '')
+    is_same_as_before = (text == before_text)
+    is_changed = False
+    if (is_empty or is_same_as_before):
+        x -= w_shrink_size
+        w -= w_shrink_size * 2
+        is_changed = True
+        reason = '[空文字列]' if is_empty else '[前回と同じ]'
+        print('縮めた', reason, w, text)
+    else:
+        x = ini_x
+        w = ini_w
+    return x, w, is_changed
+
 # 読み取った文字列をタイプする
 def type_chars(text: str):
     pag.write(text)
 
+# サイクル
+def cycle(n: int, tool):
+    x, y, w, h = ini_x, ini_y, ini_w, ini_h
+    before_text = '1'
+    for _ in range(n):
+        img = screenshot(x, y, w, h)
+        text = read_chars(tool, img)
+        x, w, is_width_changed = change_width(x, w, text, before_text)
+        before_text = text
+        if is_width_changed: continue
+        type_chars(text)
+        time.sleep(0.5)
+
 # プレイ
 def play(n: int):
     setup()
-    tool = get_tool()
     start_game()
-    for _ in range(n):
-        img = screenshot()
-        text = read_chars(tool, img)
-        type_chars(text)
-        time.sleep(1)
+    tool = get_tool()
+    cycle(n, tool)
 
 
-play(150)
+play(500)
