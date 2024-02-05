@@ -8,8 +8,9 @@ import pyocr
 # https://sushida.net/play.html
 
 
-ini_x, ini_y, ini_w, ini_h = 540, 483, 352, 24
+ini_x, ini_y, ini_w, ini_h = 540, 484, 352, 22
 w_shrink_size = 3
+cycle_sleep_time = 0.4
 
 
 # セットアップ
@@ -22,9 +23,9 @@ def get_tool():
 
 # タイトル画面からゲーム開始まで
 def start_game():
-    pag.moveTo(730, 510, duration=0.5)
-    pag.doubleClick()
-    pag.moveTo(670, 575, duration=0.5)
+    # pag.moveTo(730, 510, duration=0.5)
+    # pag.doubleClick()
+    # pag.moveTo(670, 575, duration=0.5)
     pag.click()
     pag.press('enter')
     time.sleep(2.5)
@@ -69,6 +70,7 @@ def type_chars(text: str):
 
 # サイクル
 def cycle(n: int, tool):
+    count = 0
     x, y, w, h = ini_x, ini_y, ini_w, ini_h
     before_text = '1'
     for _ in range(n):
@@ -78,7 +80,10 @@ def cycle(n: int, tool):
         before_text = text
         if is_width_changed: continue
         type_chars(text)
-        time.sleep(0.5)
+        count += 1
+        print(count, '回目')
+        if count == n: break
+        time.sleep(cycle_sleep_time);
 
 # プレイ
 def play(n: int):
