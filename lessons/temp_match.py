@@ -1,6 +1,5 @@
 import cv2
 import pyautogui as pag
-import matplotlib.pyplot as plt
 
 
 pag.FAILSAFE = True
