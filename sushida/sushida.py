@@ -14,11 +14,11 @@ class Player:
     
     SCREEN_IMAGE_PATH = 'sushida/images/screenshot.png'
     SETTING_BUTTON_IMAGE_PATH = 'sushida/images/setting_button.png'
-    CYCLE_MAX = 350
+    CYCLE_MAX = 353
     CYCLE_INTERVAL = 0.41
     CHARS_IMAGE_PATH = 'sushida/images/chars.png'
     CHARS_POSITION = {'x': 68, 'y': 232, 'w': 360, 'h': 22}
-    SHRINK_SIZE = 3
+    SHRINK_SIZE = 4
     
     def __init__(self) -> None:
         self.tool = pyocr.get_available_tools()[0]
