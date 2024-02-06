@@ -10,7 +10,7 @@ import pyocr
 
 ini_x, ini_y, ini_w, ini_h = 540, 484, 352, 22
 w_shrink_size = 3
-cycle_sleep_time = 0.4
+cycle_sleep_time = 0.415
 
 
 # セットアップ
@@ -28,15 +28,17 @@ def start_game():
     # pag.moveTo(670, 575, duration=0.5)
     pag.click()
     pag.press('enter')
-    time.sleep(2.5)
 
 # スクリーンショットを撮る
 def screenshot(x, y, w, h) -> Image:
+    img_path = 'images/chars/sushida.png'
     img = pag.screenshot(
-        'images/chars/sushida.png',
+        img_path,
         region=(x, y, w, h)
     )
-    img = img.convert('L')
+    img = img.convert('L') # グレースケールに変換
+    img = Image.eval(img, lambda x: 255 - x) # 白黒反転
+    # img.save(img_path)
     return img
 
 # スクショから文字列を読み取る
@@ -78,12 +80,14 @@ def cycle(n: int, tool):
         text = read_chars(tool, img)
         x, w, is_width_changed = change_width(x, w, text, before_text)
         before_text = text
-        if is_width_changed: continue
+        if is_width_changed:
+            time.sleep(0.5)
+            continue
         type_chars(text)
         count += 1
         print(count, '回目')
         if count == n: break
-        time.sleep(cycle_sleep_time);
+        time.sleep(cycle_sleep_time)
 
 # プレイ
 def play(n: int):
@@ -93,4 +97,4 @@ def play(n: int):
     cycle(n, tool)
 
 
-play(500)
+play(360)
