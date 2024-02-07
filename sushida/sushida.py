@@ -1,5 +1,5 @@
 import pyautogui as pag
-import time
+from time import sleep
 from PIL import Image
 import pyocr
 import cv2
@@ -19,8 +19,8 @@ class Player:
     COURSE_BUTTON_SPACE = 70
     COURSES = [1, 2, 3]
     DEFAULT_COURSE = 3
-    CYCLE_MAX = 342
-    CYCLE_INTERVALS = {1: 0.2, 2: 0.3, 3: 0.42,}
+    CYCLE_MAX = {1: 110, 2: 200, 3: 355}
+    CYCLE_INTERVALS = {1: 0.2, 2: 0.3, 3: 0.42}
     CHARS_IMAGE_PATH = 'sushida/images/chars.png'
     CHARS_POSITIONS = {
         1: {'x': 170, 'y': 232, 'w': 160, 'h': 22},
@@ -67,9 +67,9 @@ class Player:
             y+self.course_button_position['y'],
             duration=0.5)
         pag.click()
-        time.sleep(0.5)
+        sleep(0.5)
         pag.press('enter')
-        time.sleep(2)
+        sleep(2)
 
     # canvas左上の座標を取得
     def set_canvas_position(self):
@@ -121,18 +121,19 @@ class Player:
     
     # サイクル
     def cycle(self):
-        for _ in range(self.CYCLE_MAX):
+        cycle_max = self.CYCLE_MAX[self.course]
+        for _ in range(cycle_max):
             img = self.take_screenshot_chars()
             self.read_chars(img)
             is_changed_width = self.change_chars_screenshot_width()
             self.update_prev_text()
             if is_changed_width:
-                time.sleep(0.5)
+                sleep(0.5)
                 continue
             self.type_chars()
             self.count += 1
             print(f'{self.count}回', self.curr_text)
-            time.sleep(self.CYCLE_INTERVALS[self.course])
+            sleep(self.CYCLE_INTERVALS[self.course])
 
     # スクリーンショットを撮る
     def take_screenshot_chars(self) -> Image:
@@ -143,6 +144,7 @@ class Player:
         )
         img = img.convert('L') # グレースケールに変換
         img = Image.eval(img, lambda x: 255 - x) # 白黒反転
+        img = img.point(lambda x: 255 if x > 142 else x) # しきい値で2値化
         img.save(img_path)
         return img
 
