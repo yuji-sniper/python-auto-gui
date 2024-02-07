@@ -18,20 +18,26 @@ class Player:
     BEGINNER_COURSE_BUTTON_POSITION = {'x': 250, 'y': 180}
     COURSE_BUTTON_SPACE = 70
     COURSES = [1, 2, 3]
-    CYCLE_MAX = 350
-    CYCLE_INTERVAL = 0.42
+    DEFAULT_COURSE = 3
+    CYCLE_MAX = 342
+    CYCLE_INTERVALS = {1: 0.2, 2: 0.3, 3: 0.42,}
     CHARS_IMAGE_PATH = 'sushida/images/chars.png'
-    CHARS_POSITION = {'x': 68, 'y': 232, 'w': 360, 'h': 22}
-    SHRINK_SIZE = 4
+    CHARS_POSITIONS = {
+        1: {'x': 170, 'y': 232, 'w': 160, 'h': 22},
+        2: {'x': 150, 'y': 232, 'w': 200, 'h': 22},
+        3: {'x': 80, 'y': 232, 'w': 340, 'h': 22},
+    }
+    SHRINK_SIZE = {1: 5, 2: 4, 3: 4}
     
     def __init__(self) -> None:
         self.tool = pyocr.get_available_tools()[0]
         self.canvas_position = {'x': 0, 'y': 0}
         self.chars_screenshot_position_ini = {'x': 0, 'y': 0, 'w': 0, 'h': 0}
         self.chars_screenshot_position = {'x': 0, 'y': 0, 'w': 0, 'h': 0}
+        self.course = self.DEFAULT_COURSE
+        self.course_button_position = {'x': 0, 'y': 0}
         self.curr_text = ''
         self.prev_text = '1'
-        self.max_chars_count = 0
         self.count = 0
     
     # プレイ
@@ -44,11 +50,12 @@ class Player:
     def setup(self):
         pag.FAILSAFE = True
         self.set_canvas_position()
-        self.set_chars_screenshot_position()
 
     # タイトル画面からゲーム開始まで
     def start_game(self):
-        course_x, course_y = self.get_course_button_position()
+        self.select_course()
+        self.set_course_button_position()
+        self.set_chars_screenshot_position()
         x, y = self.canvas_position['x'], self.canvas_position['y']
         pag.moveTo(
             x+self.START_BUTTON_POSITION['x'],
@@ -56,8 +63,8 @@ class Player:
             duration=1)
         pag.doubleClick()
         pag.moveTo(
-            x+course_x,
-            y+course_y,
+            x+self.course_button_position['x'],
+            y+self.course_button_position['y'],
             duration=0.5)
         pag.click()
         time.sleep(0.5)
@@ -90,23 +97,27 @@ class Player:
 
     # 文字列のスクリーンショットの座標をセット
     def set_chars_screenshot_position(self):
+        chars_position = self.CHARS_POSITIONS[self.course]
         self.chars_screenshot_position_ini = {
-            'x': self.CHARS_POSITION['x'] + self.canvas_position['x'],
-            'y': self.CHARS_POSITION['y'] + self.canvas_position['y'],
-            'w': self.CHARS_POSITION['w'],
-            'h': self.CHARS_POSITION['h']
+            'x': chars_position['x'] + self.canvas_position['x'],
+            'y': chars_position['y'] + self.canvas_position['y'],
+            'w': chars_position['w'],
+            'h': chars_position['h']
         }
         self.chars_screenshot_position = self.chars_screenshot_position_ini.copy()
     
     # コースのボタンの座標を取得
-    def get_course_button_position(self) -> tuple[int, int]:
-        course = input('コース: ')
-        course = int(course)
-        if course not in self.COURSES:
-            print('コースが不正です')
-            course = 3
-        y_offset = self.BEGINNER_COURSE_BUTTON_POSITION['y'] + (course-1) * self.COURSE_BUTTON_SPACE
-        return self.BEGINNER_COURSE_BUTTON_POSITION['x'], y_offset
+    def select_course(self):
+        course_input = input('コース: ')
+        course_input = int(course_input)
+        if course_input not in self.COURSES:
+            course_input = self.DEFAULT_COURSE
+        self.course = course_input
+    
+    # コースのボタンの座標をセット
+    def set_course_button_position(self):
+        self.course_button_position['x'] = self.BEGINNER_COURSE_BUTTON_POSITION['x']
+        self.course_button_position['y'] = self.BEGINNER_COURSE_BUTTON_POSITION['y'] + (self.course-1) * self.COURSE_BUTTON_SPACE
     
     # サイクル
     def cycle(self):
@@ -121,8 +132,7 @@ class Player:
             self.type_chars()
             self.count += 1
             print(f'{self.count}回', self.curr_text)
-            self.update_max_chars_count()
-            time.sleep(self.CYCLE_INTERVAL)
+            time.sleep(self.CYCLE_INTERVALS[self.course])
 
     # スクリーンショットを撮る
     def take_screenshot_chars(self) -> Image:
@@ -133,8 +143,6 @@ class Player:
         )
         img = img.convert('L') # グレースケールに変換
         img = Image.eval(img, lambda x: 255 - x) # 白黒反転
-        # if self.count == 0:
-        #     img.save(img_path)
         img.save(img_path)
         return img
 
@@ -153,12 +161,6 @@ class Player:
     def update_prev_text(self):
         self.prev_text = self.curr_text
     
-    # 最大文字数更新
-    def update_max_chars_count(self):
-        if len(self.curr_text) > self.max_chars_count:
-            self.max_chars_count = len(self.curr_text)
-            print('最大文字数を更新', self.max_chars_count)
-
     # スクショの幅を調整する（空文字列の場合または前回と同じ文字列の場合に幅を縮める）
     def change_chars_screenshot_width(self) -> bool:
         is_empty = (self.curr_text == '')
@@ -174,8 +176,9 @@ class Player:
     
     # スクショの幅を縮める
     def shurink_chars_screenshot_width(self):
-        self.chars_screenshot_position['x'] += self.SHRINK_SIZE
-        self.chars_screenshot_position['w'] -= self.SHRINK_SIZE * 2
+        shrink_size = self.SHRINK_SIZE[self.course]
+        self.chars_screenshot_position['x'] += shrink_size
+        self.chars_screenshot_position['w'] -= shrink_size * 2
     
     # スクショの座標をリセット
     def reset_chars_screenshot_position(self):
