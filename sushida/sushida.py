@@ -14,7 +14,11 @@ class Player:
     
     SCREEN_IMAGE_PATH = 'sushida/images/screenshot.png'
     SETTING_BUTTON_IMAGE_PATH = 'sushida/images/setting_button.png'
-    CYCLE_MAX = 353
+    START_BUTTON_POSITION = {'x': 250, 'y': 250}
+    BEGINNER_COURSE_BUTTON_POSITION = {'x': 250, 'y': 180}
+    COURSE_BUTTON_SPACE = 70
+    COURSES = [1, 2, 3]
+    CYCLE_MAX = 350
     CYCLE_INTERVAL = 0.42
     CHARS_IMAGE_PATH = 'sushida/images/chars.png'
     CHARS_POSITION = {'x': 68, 'y': 232, 'w': 360, 'h': 22}
@@ -25,7 +29,6 @@ class Player:
         self.canvas_position = {'x': 0, 'y': 0}
         self.chars_screenshot_position_ini = {'x': 0, 'y': 0, 'w': 0, 'h': 0}
         self.chars_screenshot_position = {'x': 0, 'y': 0, 'w': 0, 'h': 0}
-        self.is_shurinked = False
         self.curr_text = ''
         self.prev_text = '1'
         self.max_chars_count = 0
@@ -45,10 +48,17 @@ class Player:
 
     # タイトル画面からゲーム開始まで
     def start_game(self):
+        course_x, course_y = self.get_course_button_position()
         x, y = self.canvas_position['x'], self.canvas_position['y']
-        pag.moveTo(x+250, y+250, duration=1)
+        pag.moveTo(
+            x+self.START_BUTTON_POSITION['x'],
+            y+self.START_BUTTON_POSITION['y'],
+            duration=1)
         pag.doubleClick()
-        pag.moveTo(x+250, y+320, duration=0.5)
+        pag.moveTo(
+            x+course_x,
+            y+course_y,
+            duration=0.5)
         pag.click()
         time.sleep(0.5)
         pag.press('enter')
@@ -88,20 +98,30 @@ class Player:
         }
         self.chars_screenshot_position = self.chars_screenshot_position_ini.copy()
     
+    # コースのボタンの座標を取得
+    def get_course_button_position(self) -> tuple[int, int]:
+        course = input('コース: ')
+        course = int(course)
+        if course not in self.COURSES:
+            print('コースが不正です')
+            course = 3
+        y_offset = self.BEGINNER_COURSE_BUTTON_POSITION['y'] + (course-1) * self.COURSE_BUTTON_SPACE
+        return self.BEGINNER_COURSE_BUTTON_POSITION['x'], y_offset
+    
     # サイクル
     def cycle(self):
         for _ in range(self.CYCLE_MAX):
             img = self.take_screenshot_chars()
             self.read_chars(img)
-            self.change_chars_screenshot_width()
+            is_changed_width = self.change_chars_screenshot_width()
             self.update_prev_text()
-            if self.is_shurinked:
+            if is_changed_width:
                 time.sleep(0.5)
                 continue
             self.type_chars()
-            self.update_max_chars_count()
             self.count += 1
-            print(f'{self.count}回目', self.curr_text)
+            print(f'{self.count}回', self.curr_text)
+            self.update_max_chars_count()
             time.sleep(self.CYCLE_INTERVAL)
 
     # スクリーンショットを撮る
@@ -113,8 +133,9 @@ class Player:
         )
         img = img.convert('L') # グレースケールに変換
         img = Image.eval(img, lambda x: 255 - x) # 白黒反転
-        if self.count == 10:
-            img.save(img_path)
+        # if self.count == 0:
+        #     img.save(img_path)
+        img.save(img_path)
         return img
 
     # スクショから文字列を読み取る
@@ -139,21 +160,21 @@ class Player:
             print('最大文字数を更新', self.max_chars_count)
 
     # スクショの幅を調整する（空文字列の場合または前回と同じ文字列の場合に幅を縮める）
-    def change_chars_screenshot_width(self):
+    def change_chars_screenshot_width(self) -> bool:
         is_empty = (self.curr_text == '')
         is_equal_to_prev = (self.curr_text == self.prev_text)
         if (is_empty or is_equal_to_prev):
             self.shurink_chars_screenshot_width()
-            self.is_shurinked = True
             reason = '[空文字列]' if is_empty else '[前回と同じ]'
-            print('幅縮小', reason, self.chars_screenshot_position['w'], self.curr_text)
+            print('スクショ幅縮小', reason, self.chars_screenshot_position['w'], self.curr_text)
+            return True
         else:
             self.reset_chars_screenshot_position()
-            self.is_shurinked = False
+            return False
     
     # スクショの幅を縮める
     def shurink_chars_screenshot_width(self):
-        self.chars_screenshot_position['x'] -= self.SHRINK_SIZE
+        self.chars_screenshot_position['x'] += self.SHRINK_SIZE
         self.chars_screenshot_position['w'] -= self.SHRINK_SIZE * 2
     
     # スクショの座標をリセット
