@@ -12,8 +12,8 @@ import cv2
 
 class Player:
     
-    SCREEN_IMAGE_PATH = 'sushida/images/screenshot.png'
-    SETTING_BUTTON_IMAGE_PATH = 'sushida/images/setting_button.png'
+    SCREEN_IMAGE_PATH = 'images/screenshot.png'
+    SETTING_BUTTON_IMAGE_PATH = 'images/setting_button.png'
     START_BUTTON_POSITION = {'x': 250, 'y': 250}
     BEGINNER_COURSE_BUTTON_POSITION = {'x': 250, 'y': 180}
     COURSE_BUTTON_SPACE = 70
@@ -21,7 +21,7 @@ class Player:
     DEFAULT_COURSE = 3
     CYCLE_MAX = {1: 110, 2: 200, 3: 355}
     CYCLE_INTERVALS = {1: 0.2, 2: 0.3, 3: 0.42}
-    CHARS_IMAGE_PATH = 'sushida/images/chars.png'
+    CHARS_IMAGE_PATH = 'images/chars.png'
     CHARS_POSITIONS = {
         1: {'x': 170, 'y': 232, 'w': 160, 'h': 22},
         2: {'x': 150, 'y': 232, 'w': 200, 'h': 22},
@@ -144,7 +144,7 @@ class Player:
         )
         img = img.convert('L') # グレースケールに変換
         img = Image.eval(img, lambda x: 255 - x) # 白黒反転
-        img = img.point(lambda x: 255 if x > 142 else x) # しきい値で2値化
+        img = img.point(lambda x: 255 if x > 135 else x) # しきい値で2値化
         img.save(img_path)
         return img
 
