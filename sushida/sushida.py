@@ -5,12 +5,10 @@ import pyocr
 import cv2
 
 
-# 寿司打の自動プレイ
 # https://sushida.net/play.html
 
 
-
-class Player:
+class Sushida:
     
     SCREEN_IMAGE_PATH = 'images/screenshot.png'
     SETTING_BUTTON_IMAGE_PATH = 'images/setting_button.png'
@@ -19,7 +17,7 @@ class Player:
     COURSE_BUTTON_SPACE = 70
     COURSES = [1, 2, 3]
     DEFAULT_COURSE = 3
-    CYCLE_MAX = {1: 110, 2: 200, 3: 355}
+    CYCLE_MAX = {1: 110, 2: 200, 3: 350}
     CYCLE_INTERVALS = {1: 0.2, 2: 0.3, 3: 0.42}
     CHARS_IMAGE_PATH = 'images/chars.png'
     CHARS_POSITIONS = {
@@ -191,5 +189,5 @@ class Player:
         pag.write(self.curr_text)
 
 
-player = Player()
-player.play()
+sushida = Sushida()
+sushida.play()
