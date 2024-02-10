@@ -189,5 +189,9 @@ class Sushida:
         pag.write(self.curr_text)
 
 
-sushida = Sushida()
-sushida.play()
+try:
+    sushida = Sushida()
+    sushida.play()
+except KeyboardInterrupt:
+    print('終了')
+    exit()
